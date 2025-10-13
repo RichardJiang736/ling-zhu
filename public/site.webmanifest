@@ -1,0 +1,19 @@
+{
+  "name": "聆竹 - 听声辨人",
+  "short_name": "聆竹",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#276b4d",
+  "background_color": "#f1f7f0",
+  "display": "standalone"
+}

@@ -1,0 +1,417 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  
+  /* 聆竹色彩系统 */
+  --bush: #12402c;
+  --green-pea: #276b4d;
+  --spring-leaves: #518764;
+  --oxley: #76a483;
+  --killarney: #416e54;
+  --saltpan: #f1f7f0;
+  --zanah: #d7ead3;
+  --pixie-green: #b8d6b6;
+  
+  /* 系统色彩映射 */
+  --background: var(--saltpan);
+  --foreground: var(--bush);
+  --card: var(--saltpan);
+  --card-foreground: var(--bush);
+  --popover: var(--saltpan);
+  --popover-foreground: var(--bush);
+  --primary: var(--green-pea);
+  --primary-foreground: var(--saltpan);
+  --secondary: var(--zanah);
+  --secondary-foreground: var(--bush);
+  --muted: var(--zanah);
+  --muted-foreground: var(--oxley);
+  --accent: var(--pixie-green);
+  --accent-foreground: var(--bush);
+  --destructive: var(--killarney);
+  --border: var(--oxley);
+  --input: var(--oxley);
+  --ring: var(--green-pea);
+  
+  /* 保留原有变量 */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --sidebar-ring: var(--ring);
+  --sidebar-border: var(--border);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-foreground: var(--foreground);
+  --sidebar: var(--background);
+  --chart-1: var(--green-pea);
+  --chart-2: var(--spring-leaves);
+  --chart-3: var(--oxley);
+  --chart-4: var(--killarney);
+  --chart-5: var(--pixie-green);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Source Han Sans SC", "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  /* 思源字体引入 */
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&family=Noto+Sans+SC:wght@400&family=Noto+Mono+SC&display=swap');
+  
+  /* 标题字体 - 思源宋体 Heavy */
+  .font-serif-title {
+    font-family: "Noto Serif SC", serif;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+  }
+  
+  /* 正文字体 - 思源黑体 Regular */
+  .font-sans-body {
+    font-family: "Noto Sans SC", sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  /* 等宽字体 - Source Han Mono */
+  .font-mono-cn {
+    font-family: "Noto Mono SC", monospace;
+  }
+  
+  /* 墨晕动画 */
+  @keyframes inkRipple {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.9;
+      filter: blur(0px);
+    }
+    50% {
+      transform: scale(1.2);
+      opacity: 0.6;
+      filter: blur(8px);
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+      filter: blur(20px);
+    }
+  }
+  
+  .ink-ripple {
+    animation: inkRipple 2s ease-out forwards;
+  }
+  
+  /* 竹简展开动画 */
+  @keyframes bambooUnroll {
+    0% {
+      transform: rotateY(90deg) translateZ(-100px);
+      opacity: 0;
+    }
+    50% {
+      transform: rotateY(45deg) translateZ(0);
+      opacity: 0.8;
+    }
+    100% {
+      transform: rotateY(0deg) translateZ(0);
+      opacity: 1;
+    }
+  }
+  
+  .bamboo-unroll {
+    animation: bambooUnroll 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    transform-style: preserve-3d;
+  }
+  
+  /* 呼吸动画 */
+  @keyframes breathing {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 1;
+    }
+  }
+  
+  .breathing {
+    animation: breathing 3s ease-in-out infinite;
+  }
+  
+  /* 强制GPU层 */
+  .gpu-layer {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  /* 高对比模式 */
+  .high-contrast {
+    filter: contrast(2) grayscale(1);
+  }
+  
+  .high-contrast * {
+    color: #000 !important;
+    background-color: #fff !important;
+    border-color: #000 !important;
+  }
+  
+  /* 波形容器 */
+  .waveform-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+  
+  /* 滚动文本 */
+  .scroll-text {
+    animation: scrollText 20s linear infinite;
+  }
+  
+  .scroll-text.paused {
+    animation-play-state: paused;
+  }
+  
+  @keyframes scrollText {
+    0% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+  
+  /* 60fps优化 */
+  .smooth-60fps {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+  }
+  
+  /* 通知样式 */
+  .notification-glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .notification-glass.error {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+  
+  .notification-glass.info {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+  
+  /* 减少动画偏好支持 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .breathing {
+      animation: none !important;
+    }
+    
+    .scroll-text {
+      animation: none !important;
+      transform: translateX(0) !important;
+    }
+    
+    .ink-ripple {
+      animation: none !important;
+    }
+    
+    .bamboo-unroll {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+  }
+  
+  /* 移动设备优化 */
+  @media (max-width: 768px) {
+    .smooth-60fps {
+      will-change: auto;
+    }
+    
+    .gpu-layer {
+      transform: none;
+    }
+  }
+  
+  /* 省电模式优化 */
+  @media (prefers-reduced-data: reduce) {
+    .waveform-container {
+      transition: none;
+    }
+    
+    .scroll-text {
+      animation: none;
+    }
+  }
+  
+  /* 竹节滑动条样式 */
+  .bamboo-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  /* WebKit浏览器滑块样式 */
+  .bamboo-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #276b4d;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .bamboo-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 6px rgba(39, 107, 77, 0.5);
+  }
+  
+  /* Firefox滑块样式 */
+  .bamboo-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #276b4d;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  .bamboo-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 6px rgba(39, 107, 77, 0.5);
+  }
+  
+  /* 自定义滚动条 */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f7f0;
+    border-radius: 4px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #76a483;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #276b4d;
+  }
+  
+  /* Firefox滚动条 */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #76a483 #f1f7f0;
+  }
+}
