@@ -10,12 +10,12 @@ interface Notification {
   type: 'error' | 'info'
 }
 
-interface Sentence {
+interface Segment {
   id: string
   speaker: string
-  text: string
   startTime: number
   endTime: number
+  duration: number
   color: string
 }
 
@@ -29,29 +29,12 @@ export default function LingZhu() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioFileRef = useRef<File | null>(null)
   
-  const { isListening, speakers, startListening, stopListening, reset, error, performance, diarizationResult, isProcessing, audioFile } = useAudioProcessor()
+  const { isListening, speakers, startListening, stopListening, reset, error, diarizationResult, isProcessing, audioFile } = useAudioProcessor()
 
-  // Mock sentence data - fallback when API not configured
-  const mockSentences: Sentence[] = [
-    { id: '1', speaker: '王羲之', text: '永和九年，岁在癸丑，暮春之初，会于会稽山阴之兰亭', startTime: 0, endTime: 12, color: '#276b4d' },
-    { id: '2', speaker: '谢安', text: '群贤毕至，少长咸集', startTime: 13, endTime: 24, color: '#518764' },
-    { id: '3', speaker: '王羲之', text: '此地有崇山峻岭，茂林修竹', startTime: 25, endTime: 38, color: '#276b4d' },
-    { id: '4', speaker: '孙绰', text: '又有清流激湍，映带左右，引以为流觞曲水', startTime: 39, endTime: 56, color: '#76a483' },
-    { id: '5', speaker: '谢安', text: '列坐其次，虽无丝竹管弦之盛', startTime: 57, endTime: 71, color: '#518764' },
-    { id: '6', speaker: '王羲之', text: '是日也，天朗气清，惠风和畅', startTime: 72, endTime: 88, color: '#276b4d' },
-    { id: '7', speaker: '郗昙', text: '仰观宇宙之大，俯察品类之盛', startTime: 89, endTime: 105, color: '#416e54' },
-    { id: '8', speaker: '王蕴之', text: '所以游目骋怀，足以极视听之娱', startTime: 106, endTime: 124, color: '#b8d6b6' },
-    { id: '9', speaker: '王羲之', text: '信可乐也', startTime: 125, endTime: 135, color: '#276b4d' },
-    { id: '10', speaker: '孙绰', text: '夫人之相与，俯仰一世', startTime: 136, endTime: 152, color: '#76a483' },
-    { id: '11', speaker: '谢安', text: '或取诸怀抱，晤言一室之内', startTime: 153, endTime: 170, color: '#518764' },
-    { id: '12', speaker: '王羲之', text: '或因寄所托，放浪形骸之外', startTime: 171, endTime: 180, color: '#276b4d' },
-  ]
-
-  // Use real diarization results if available, otherwise use mock data
-  const sentences = diarizationResult?.sentences.map(s => ({
+  const segments = diarizationResult?.segments.map(s => ({
     ...s,
     color: diarizationResult.speakers.find(sp => sp.name === s.speaker)?.color || '#276b4d'
-  })) || mockSentences
+  })) || []
 
   const actualDuration = diarizationResult?.duration || duration
 
@@ -93,18 +76,15 @@ export default function LingZhu() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  // 添加通知
   const addNotification = (message: string, type: 'error' | 'info' = 'error') => {
     const id = Date.now().toString()
     setNotifications(prev => [...prev, { id, message, type }])
     
-    // 5秒后自动移除
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id))
     }, 5000)
   }
 
-  // 监听错误变化
   useEffect(() => {
     if (error) {
       addNotification(error, 'error')
@@ -132,7 +112,6 @@ export default function LingZhu() {
     }
   }
 
-  // 开始辨声
   const handleStartListening = async () => {
     try {
       await startListening()
@@ -140,14 +119,10 @@ export default function LingZhu() {
         setShowBamboo(true)
       }, 800)
     } catch (err) {
-      console.error('开始辨声失败:', err)
-      // 错误已经通过useEffect处理
     }
   }
 
-  // 重置
   const handleReset = () => {
-    // Stop audio if playing
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
@@ -161,10 +136,8 @@ export default function LingZhu() {
     setCurrentTime(0)
   }
 
-  // 键盘事件
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Space bar: Toggle play/pause if results are showing, otherwise open file picker
       if (e.key === ' ') {
         e.preventDefault()
         if (showBamboo && audioRef.current) {
@@ -174,7 +147,6 @@ export default function LingZhu() {
         }
       }
       
-      // Enter: Open file picker if no results showing
       if (e.key === 'Enter') {
         e.preventDefault()
         if (!showBamboo && !isListening && !isProcessing) {
@@ -182,7 +154,6 @@ export default function LingZhu() {
         }
       }
       
-      // Escape: Reset
       if (e.key === 'Escape') {
         handleReset()
       }
@@ -191,9 +162,6 @@ export default function LingZhu() {
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [isListening, showBamboo, isProcessing, isPlaying])
-
-  // Note: Auto-hide logic removed - we now have a persistent result view with audio player
-  // Users can manually reset using the reset button
 
   return (
     <div className={`min-h-screen bg-background font-sans-body transition-all duration-300 ${highContrast ? 'high-contrast' : ''}`}>
@@ -239,13 +207,6 @@ export default function LingZhu() {
           >
             {highContrast ? '标准模式' : '高对比模式'}
           </button>
-          
-          {/* 简化的性能监控 - 只显示处理时间 */}
-          {/* {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-muted-foreground bg-card/50 backdrop-blur-sm p-2 rounded border border-border/30">
-              <div>处理时间: {(performance.processingTime / 1000).toFixed(2)}s</div>
-            </div>
-          )} */}
         </div>
 
         {/* 中央交互区域 */}
@@ -362,14 +323,13 @@ export default function LingZhu() {
                 </div>
               </motion.div>
 
-              {/* 竹简句子流 */}
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                {sentences.map((sentence, index) => {
-                  const isActive = currentTime >= sentence.startTime && currentTime <= sentence.endTime
+                {segments.map((segment, index) => {
+                  const isActive = currentTime >= segment.startTime && currentTime <= segment.endTime
                   
                   return (
                     <motion.div
-                      key={sentence.id}
+                      key={segment.id}
                       initial={{ opacity: 0, x: -30, rotateY: 90 }}
                       animate={{ opacity: 1, x: 0, rotateY: 0 }}
                       transition={{ 
@@ -383,47 +343,43 @@ export default function LingZhu() {
                           : 'border-l-[#d4c5a9] hover:shadow-lg'
                       }`}
                       style={{
-                        borderLeftColor: isActive ? sentence.color : '#d4c5a9'
+                        borderLeftColor: isActive ? segment.color : '#d4c5a9'
                       }}
                     >
                       <div className="p-4 flex items-start gap-4">
-                        {/* 竹简纹理装饰 */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#8b7355]/5 to-transparent pointer-events-none rounded-r-lg" />
                         
-                        {/* 说话人标签 */}
                         <div className="relative z-10 flex-shrink-0">
                           <div 
                             className="px-3 py-1 rounded-full text-sm font-serif-title text-white shadow-sm"
-                            style={{ backgroundColor: sentence.color }}
+                            style={{ backgroundColor: segment.color }}
                           >
-                            {sentence.speaker}
+                            {segment.speaker}
                           </div>
                         </div>
 
-                        {/* 句子文本 */}
                         <div className="flex-1 relative z-10">
                           <p className="font-sans-body text-base text-[#2d2416] leading-relaxed">
-                            {sentence.text}
+                            时长: {segment.duration.toFixed(2)}s
                           </p>
                         </div>
 
-                        {/* 时间戳 */}
-                        <div className="relative z-10 flex-shrink-0 text-right">
+                        <div className="relative z-10 flex-shrink-0 text-right space-y-1">
                           <button
                             onClick={() => {
-                              setCurrentTime(sentence.startTime)
+                              setCurrentTime(segment.startTime)
                               if (audioRef.current) {
-                                audioRef.current.currentTime = sentence.startTime
+                                audioRef.current.currentTime = segment.startTime
                                 if (!isPlaying) {
                                   audioRef.current.play()
                                   setIsPlaying(true)
                                 }
                               }
                             }}
-                            className="font-mono-cn text-xs text-[#b8d6b6] hover:text-[#276b4d] transition-colors cursor-pointer bg-[#f5f1e8]/80 px-2 py-1 rounded"
-                            aria-label={`跳转到 ${formatTime(sentence.startTime)}`}
+                            className="font-mono-cn text-xs text-[#b8d6b6] hover:text-[#276b4d] transition-colors cursor-pointer bg-[#f5f1e8]/80 px-2 py-1 rounded block w-full"
+                            aria-label={`跳转到 ${formatTime(segment.startTime)}`}
                           >
-                            {formatTime(sentence.startTime)}
+                            {formatTime(segment.startTime)} - {formatTime(segment.endTime)}
                           </button>
                         </div>
                       </div>
@@ -452,18 +408,23 @@ export default function LingZhu() {
             <button
               className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-sans-body"
               onClick={() => {
-                const data = sentences.map(s => ({
+                const data = segments.map(s => ({
                   speaker: s.speaker,
-                  text: s.text,
                   startTime: s.startTime,
                   endTime: s.endTime,
+                  duration: s.duration,
                   timestamp: Date.now()
                 }))
-                console.log('导出转录数据:', data)
-                // 这里可以实现真正的导出功能
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = `speaker-segments-${Date.now()}.json`
+                a.click()
+                URL.revokeObjectURL(url)
               }}
             >
-              导出转录
+              导出分段
             </button>
           </motion.div>
         )}
