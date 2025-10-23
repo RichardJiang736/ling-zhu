@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         speakers,
         duration,
         totalSpeakers: speakers.length,
-        method: 'Sherpa-ONNX (PyAnnote + 3D-Speaker)',
+        method: 'PyAnnote ONNX',
       },
     });
 
