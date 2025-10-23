@@ -10,7 +10,10 @@
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "preview": "npm run pages:build && wrangler pages dev",
+    "deploy": "npm run pages:build && wrangler pages deploy"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -91,6 +94,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
