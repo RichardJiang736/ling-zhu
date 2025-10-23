@@ -8,8 +8,9 @@ nixPkgs = ["nodejs_20", "python311", "python311Packages.pip", "ffmpeg"]
 cmds = [
   "npm install",
   "mkdir -p /opt/python-deps",
-  "pip install --break-system-packages --target=/opt/python-deps --index-url https://download.pytorch.org/whl/cpu torch==2.5.0 torchaudio==2.5.0",
-  "pip install --break-system-packages --target=/opt/python-deps speechbrain==1.0.3 numpy scipy"
+  "pip install --break-system-packages --no-cache-dir --target=/opt/python-deps --index-url https://download.pytorch.org/whl/cpu torch==2.5.0+cpu torchaudio==2.5.0+cpu",
+  "pip install --break-system-packages --no-cache-dir --no-deps --target=/opt/python-deps speechbrain==1.0.3",
+  "pip install --break-system-packages --no-cache-dir --target=/opt/python-deps numpy scipy joblib packaging sentencepiece tqdm hyperpyyaml huggingface_hub filelock typing-extensions fsspec pyyaml requests"
 ]
 
 [phases.build]
