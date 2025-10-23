@@ -6,12 +6,15 @@ nixPkgs = ["nodejs_20", "python311", "python311Packages.pip", "ffmpeg"]
 
 [phases.install]
 cmds = [
-  "npm install",
-  "pip install --break-system-packages speechbrain torch torchaudio numpy"
+  "npm install"
 ]
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = [
+  "pip install --break-system-packages --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu",
+  "pip install --break-system-packages --no-cache-dir speechbrain numpy",
+  "npm run build"
+]
 
 [start]
 cmd = "npm start"
