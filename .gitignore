@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# deployment docs (keep local only)
+RAILWAY_DEPLOYMENT.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
