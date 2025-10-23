@@ -3,8 +3,19 @@ import { SepFormerSeparation } from '@/lib/sepformer-separation';
 
 const sepformer = new SepFormerSeparation();
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
+    const contentLength = request.headers.get('content-length');
+    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: '音频文件过大，请上传小于50MB的文件' },
+        { status: 413 }
+      );
+    }
+
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
     const segmentsJson = formData.get('segments') as string;

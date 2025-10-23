@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
   webpack: (config, { dev, isServer }) => {
     if (dev) {
       config.watchOptions = {

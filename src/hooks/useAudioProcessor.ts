@@ -165,11 +165,22 @@ export function useAudioProcessor(): AudioProcessorHook {
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '说话人识别失败')
+        let errorMessage = '说话人识别失败'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch {
+          errorMessage = `服务器错误 (${response.status}): ${response.statusText}`
+        }
+        throw new Error(errorMessage)
       }
 
-      const result = await response.json()
+      let result
+      try {
+        result = await response.json()
+      } catch {
+        throw new Error('服务器返回了无效的响应格式')
+      }
 
       if (!result.success) {
         throw new Error(result.error || '说话人识别失败')

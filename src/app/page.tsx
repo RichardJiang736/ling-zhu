@@ -40,7 +40,8 @@ export default function LingZhu() {
   useEffect(() => {
     if (audioFile && !audioRef.current) {
       const audio = new Audio()
-      audio.src = URL.createObjectURL(audioFile)
+      const blobUrl = URL.createObjectURL(audioFile)
+      audio.src = blobUrl
       audioRef.current = audio
 
       audio.addEventListener('loadedmetadata', () => {
@@ -56,10 +57,17 @@ export default function LingZhu() {
         setCurrentTime(0)
       })
 
+      audio.addEventListener('error', (e) => {
+        console.error('Audio loading error:', e)
+        addNotification('音频文件加载失败', 'error')
+      })
+
       return () => {
-        URL.revokeObjectURL(audio.src)
-        audio.pause()
-        audio.remove()
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current.src = ''
+        }
+        URL.revokeObjectURL(blobUrl)
       }
     }
   }, [audioFile])
@@ -417,8 +425,14 @@ export default function LingZhu() {
                   })
 
                   if (!response.ok) {
-                    const errorData = await response.json()
-                    throw new Error(errorData.error || '音频分离失败')
+                    let errorMessage = '音频分离失败'
+                    try {
+                      const errorData = await response.json()
+                      errorMessage = errorData.error || errorMessage
+                    } catch {
+                      errorMessage = `服务器错误 (${response.status}): ${response.statusText}`
+                    }
+                    throw new Error(errorMessage)
                   }
 
                   const blob = await response.blob()
