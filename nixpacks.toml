@@ -7,8 +7,7 @@ nixPkgs = ["nodejs_20", "python311", "python311Packages.pip", "ffmpeg"]
 [phases.install]
 cmds = [
   "npm install",
-  "pip install --upgrade pip",
-  "pip install speechbrain torch torchaudio numpy"
+  "pip install --break-system-packages speechbrain torch torchaudio numpy"
 ]
 
 [phases.build]
