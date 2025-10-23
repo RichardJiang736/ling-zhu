@@ -4,10 +4,14 @@ import { SherpaDiarization } from '@/lib/sherpa-diarization';
 const sherpaDiarization = new SherpaDiarization();
 
 export const runtime = 'nodejs';
+export const maxDuration = 300;
+
 export async function POST(request: NextRequest) {
   try {
     const contentLength = request.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > 100 * 1024 * 1024) {
+    const maxSize = 100 * 1024 * 1024;
+    
+    if (contentLength && parseInt(contentLength) > maxSize) {
       return NextResponse.json(
         { error: '音频文件过大，请上传小于100MB的文件' },
         { status: 413 }
