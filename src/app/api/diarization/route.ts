@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
       return {
         id: speakerId.toString(),
-        name: `说话人${speakerId+1}`,
+        name: `说话人${index + 1}`,
         segmentCount: segments.length,
         totalDuration,
         color: ['#276b4d', '#518764', '#76a483', '#416e54', '#b8d6b6'][index % 5],
@@ -41,14 +41,16 @@ export async function POST(request: NextRequest) {
     const duration = speakerSegments.length > 0 
       ? Math.max(...speakerSegments.map(s => s.endTime))
       : 0;
-
-    const segments = speakerSegments.map((segment) => ({
-      id: `${segment.speaker}-${segment.startTime}-${segment.endTime}`,
-      speaker: `说话人${segment.speaker}`,
-      startTime: segment.startTime,
-      endTime: segment.endTime,
-      duration: segment.endTime - segment.startTime,
-    }));
+    const segments = speakerSegments.map((segment) => {
+      const speakerIndex = speakerIds.indexOf(segment.speaker);
+      return {
+        id: `${segment.speaker}-${segment.startTime}-${segment.endTime}`,
+        speaker: `说话人${speakerIndex + 1}`,
+        startTime: segment.startTime,
+        endTime: segment.endTime,
+        duration: segment.endTime - segment.startTime,
+      };
+    });
 
     return NextResponse.json({
       success: true,
