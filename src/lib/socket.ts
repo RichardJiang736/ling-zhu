@@ -11,6 +11,7 @@ export const setupSocket = (io: Server) => {
     });
 
     socket.on('disconnect', () => {
+      console.log('Client disconnected:', socket.id);
     });
 
     socket.emit('message', {

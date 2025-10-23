@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ONNXDiarization } from '@/lib/onnx-diarization';
+import { SherpaDiarization } from '@/lib/sherpa-diarization';
 
-const onnxDiarization = new ONNXDiarization();
+const sherpaDiarization = new SherpaDiarization();
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
     const bytes = await audioFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    await onnxDiarization.initialize();
-    const speakerSegments = await onnxDiarization.processAudio(buffer);
+    await sherpaDiarization.initialize();
+    const speakerSegments = await sherpaDiarization.processAudio(buffer);
 
     const speakerIds = [...new Set(speakerSegments.map(s => s.speaker))];
-    const speakers = speakerIds.map((speakerId, index) => {
+    const speakers = speakerIds.map((speakerId: number, index: number) => {
       const segments = speakerSegments.filter(s => s.speaker === speakerId);
       const totalDuration = segments.reduce(
         (sum, s) => sum + (s.endTime - s.startTime),
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         speakers,
         duration,
         totalSpeakers: speakers.length,
-        method: 'PyAnnote ONNX',
+        method: 'Sherpa-ONNX (PyAnnote + 3D-Speaker)',
       },
     });
 

@@ -1,8 +1,3 @@
-/**
- * Script to inspect the ONNX model's input/output specifications
- * Run with: npx tsx scripts/inspect-model.ts
- */
-
 import * as ort from 'onnxruntime-node';
 import path from 'path';
 
@@ -15,14 +10,12 @@ async function inspectModel() {
   try {
     const session = await ort.InferenceSession.create(modelPath);
     
-    console.log('✅ Model loaded successfully!\n');
+    console.log('Model loaded successfully!\n');
     
-    // Input information
-    console.log('📥 INPUT SPECIFICATIONS:');
+    console.log('INPUT SPECIFICATIONS:');
     console.log('━'.repeat(50));
     session.inputNames.forEach((name, idx) => {
       console.log(`Input ${idx + 1}: "${name}"`);
-      // Try to get metadata if available
       const metadata = (session as any).inputMetadata?.[name];
       if (metadata) {
         console.log(`  Type: ${metadata.type}`);
@@ -32,8 +25,7 @@ async function inspectModel() {
     
     console.log('');
     
-    // Output information
-    console.log('📤 OUTPUT SPECIFICATIONS:');
+    console.log('OUTPUT SPECIFICATIONS:');
     console.log('━'.repeat(50));
     session.outputNames.forEach((name, idx) => {
       console.log(`Output ${idx + 1}: "${name}"`);
@@ -46,24 +38,19 @@ async function inspectModel() {
     
     console.log('');
     
-    // Test with dummy input
-    console.log('🧪 TESTING WITH DUMMY INPUT:');
+    console.log('TESTING WITH DUMMY INPUT:');
     console.log('━'.repeat(50));
     
-    // PyAnnote models often expect [batch, channel, samples]
     const sampleRate = 16000;
-    const duration = 1; // seconds
+    const duration = 1;
     const numSamples = sampleRate * duration;
     const dummyAudio = new Float32Array(numSamples);
     
-    // Fill with random noise
     for (let i = 0; i < numSamples; i++) {
       dummyAudio[i] = (Math.random() * 2 - 1) * 0.1;
     }
     
     const inputName = session.inputNames[0];
-    
-    // Try 3D input: [batch, channel, samples]
     const inputTensor = new ort.Tensor('float32', dummyAudio, [1, 1, numSamples]);
     
     console.log(`Input shape: [1, 1, ${numSamples}] (batch, channel, samples)`);
@@ -73,7 +60,7 @@ async function inspectModel() {
     const feeds = { [inputName]: inputTensor };
     const results = await session.run(feeds);
     
-    console.log('📊 OUTPUT RESULTS:');
+    console.log('OUTPUT RESULTS:');
     console.log('━'.repeat(50));
     Object.entries(results).forEach(([name, tensor]) => {
       console.log(`Output "${name}":`);
@@ -81,7 +68,6 @@ async function inspectModel() {
       console.log(`  Type: ${tensor.type}`);
       console.log(`  Data length: ${tensor.data.length}`);
       
-      // Calculate statistics
       const dataArray = Array.from(tensor.data as Float32Array);
       
       if (dataArray.length <= 20) {
@@ -98,7 +84,7 @@ async function inspectModel() {
     });
     
   } catch (error) {
-    console.error('❌ Error loading or testing model:', error);
+    console.error('Error loading or testing model:', error);
   }
 }
 

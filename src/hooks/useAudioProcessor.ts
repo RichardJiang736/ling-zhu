@@ -239,6 +239,7 @@ export function useAudioProcessor(): AudioProcessorHook {
       }
       
     } catch (err) {
+      console.error('Audio processing error:', err)
     }
     
     if (isListening) {
@@ -276,6 +277,7 @@ export function useAudioProcessor(): AudioProcessorHook {
         sourceRef.current.stop()
         sourceRef.current.disconnect()
       } catch (e) {
+        console.error('Error stopping audio source:', e)
       }
       sourceRef.current = null
     }

@@ -46,7 +46,6 @@
 :root {
   --radius: 0.625rem;
   
-  /* 聆竹色彩系统 */
   --bush: #12402c;
   --green-pea: #276b4d;
   --spring-leaves: #518764;
@@ -56,7 +55,6 @@
   --zanah: #d7ead3;
   --pixie-green: #b8d6b6;
   
-  /* 系统色彩映射 */
   --background: var(--saltpan);
   --foreground: var(--bush);
   --card: var(--saltpan);
@@ -76,7 +74,6 @@
   --input: var(--oxley);
   --ring: var(--green-pea);
   
-  /* 保留原有变量 */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --sidebar-ring: var(--ring);
@@ -139,10 +136,8 @@
     line-height: 1.6;
   }
   
-  /* 思源字体引入 */
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&family=Noto+Sans+SC:wght@400&family=Noto+Mono+SC&display=swap');
   
-  /* 标题字体 - 思源宋体 Heavy */
   .font-serif-title {
     font-family: "Noto Serif SC", serif;
     font-weight: 900;
@@ -150,19 +145,16 @@
     letter-spacing: 0.05em;
   }
   
-  /* 正文字体 - 思源黑体 Regular */
   .font-sans-body {
     font-family: "Noto Sans SC", sans-serif;
     font-weight: 400;
     line-height: 1.6;
   }
   
-  /* 等宽字体 - Source Han Mono */
   .font-mono-cn {
     font-family: "Noto Mono SC", monospace;
   }
   
-  /* 墨晕动画 */
   @keyframes inkRipple {
     0% {
       transform: scale(0.8);
@@ -185,7 +177,6 @@
     animation: inkRipple 2s ease-out forwards;
   }
   
-  /* 竹简展开动画 */
   @keyframes bambooUnroll {
     0% {
       transform: rotateY(90deg) translateZ(-100px);
@@ -206,7 +197,6 @@
     transform-style: preserve-3d;
   }
   
-  /* 呼吸动画 */
   @keyframes breathing {
     0%, 100% {
       transform: scale(1);
@@ -222,14 +212,12 @@
     animation: breathing 3s ease-in-out infinite;
   }
   
-  /* 强制GPU层 */
   .gpu-layer {
     transform: translateZ(0);
     backface-visibility: hidden;
     perspective: 1000px;
   }
   
-  /* 高对比模式 */
   .high-contrast {
     filter: contrast(2) grayscale(1);
   }
@@ -240,14 +228,12 @@
     border-color: #000 !important;
   }
   
-  /* 波形容器 */
   .waveform-container {
     position: relative;
     overflow: hidden;
     border-radius: 4px;
   }
   
-  /* 滚动文本 */
   .scroll-text {
     animation: scrollText 20s linear infinite;
   }
@@ -265,13 +251,11 @@
     }
   }
   
-  /* 60fps优化 */
   .smooth-60fps {
     will-change: transform, opacity;
     transform: translateZ(0);
   }
   
-  /* 通知样式 */
   .notification-glass {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -289,7 +273,6 @@
     border: 1px solid rgba(34, 197, 94, 0.2);
   }
   
-  /* 减少动画偏好支持 */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -320,7 +303,6 @@
     }
   }
   
-  /* 移动设备优化 */
   @media (max-width: 768px) {
     .smooth-60fps {
       will-change: auto;
@@ -331,7 +313,6 @@
     }
   }
   
-  /* 省电模式优化 */
   @media (prefers-reduced-data: reduce) {
     .waveform-container {
       transition: none;
@@ -342,7 +323,6 @@
     }
   }
   
-  /* 竹节滑动条样式 */
   .bamboo-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -354,7 +334,6 @@
     transition: all 0.2s ease;
   }
   
-  /* WebKit浏览器滑块样式 */
   .bamboo-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -372,7 +351,6 @@
     box-shadow: 0 3px 6px rgba(39, 107, 77, 0.5);
   }
   
-  /* Firefox滑块样式 */
   .bamboo-slider::-moz-range-thumb {
     width: 16px;
     height: 16px;
@@ -389,7 +367,6 @@
     box-shadow: 0 3px 6px rgba(39, 107, 77, 0.5);
   }
   
-  /* 自定义滚动条 */
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
   }
@@ -409,7 +386,6 @@
     background: #276b4d;
   }
   
-  /* Firefox滚动条 */
   .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #76a483 #f1f7f0;

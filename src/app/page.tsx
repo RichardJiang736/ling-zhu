@@ -25,12 +25,11 @@ export default function LingZhu() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(180) // Mock 3-minute audio
+  const [duration, setDuration] = useState(180)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioFileRef = useRef<File | null>(null)
   
   const { isListening, speakers, startListening, stopListening, reset, error, diarizationResult, isProcessing, audioFile } = useAudioProcessor()
-
   const segments = diarizationResult?.segments.map(s => ({
     ...s,
     color: diarizationResult.speakers.find(sp => sp.name === s.speaker)?.color || '#276b4d'
@@ -38,24 +37,20 @@ export default function LingZhu() {
 
   const actualDuration = diarizationResult?.duration || duration
 
-  // Initialize audio element when audio file is available
   useEffect(() => {
     if (audioFile && !audioRef.current) {
       const audio = new Audio()
       audio.src = URL.createObjectURL(audioFile)
       audioRef.current = audio
 
-      // Update duration when metadata loads
       audio.addEventListener('loadedmetadata', () => {
         setDuration(audio.duration)
       })
 
-      // Update current time as audio plays
       audio.addEventListener('timeupdate', () => {
         setCurrentTime(audio.currentTime)
       })
 
-      // Handle audio end
       audio.addEventListener('ended', () => {
         setIsPlaying(false)
         setCurrentTime(0)
@@ -69,7 +64,6 @@ export default function LingZhu() {
     }
   }, [audioFile])
 
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
@@ -91,7 +85,6 @@ export default function LingZhu() {
     }
   }, [error])
 
-  // Audio player controls
   const togglePlayPause = () => {
     if (!audioRef.current) return
 
@@ -119,6 +112,7 @@ export default function LingZhu() {
         setShowBamboo(true)
       }, 800)
     } catch (err) {
+      console.error('Failed to start listening:', err)
     }
   }
 
@@ -168,7 +162,6 @@ export default function LingZhu() {
       {/* 主容器 */}
       <main className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden">
         
-        {/* 标题 */}
         <header className="absolute top-8 left-0 right-0 text-center">
           <h1 className="font-serif-title text-4xl md:text-6xl text-foreground breathing">
             聆竹
@@ -177,7 +170,6 @@ export default function LingZhu() {
             听声辨人 · 气若幽兰
           </p>
           
-          {/* 通知区域 */}
           <div className="absolute top-15 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none">
             <AnimatePresence>
               {notifications.map((notification) => (
@@ -198,7 +190,6 @@ export default function LingZhu() {
           </div>
         </header>
 
-        {/* 控制面板 */}
         <div className="absolute top-8 right-8 flex flex-col gap-4">
           <button
             onClick={() => setHighContrast(!highContrast)}
@@ -209,10 +200,8 @@ export default function LingZhu() {
           </button>
         </div>
 
-        {/* 中央交互区域 */}
         <div className="relative flex items-center justify-center">
           
-          {/* 听字篆印 */}
           {!showBamboo && (
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
@@ -236,7 +225,6 @@ export default function LingZhu() {
                 }
               }}
             >
-              {/* 墨晕效果 */}
               {(isListening || isProcessing) && (
                 <motion.div
                   animate={{ 
@@ -253,7 +241,6 @@ export default function LingZhu() {
                 />
               )}
               
-              {/* 听字 */}
               <div className="relative z-10 w-32 h-32 md:w-48 md:h-48 flex items-center justify-center bg-card rounded-full border-4 border-foreground shadow-2xl gpu-layer">
                 <span className="font-serif-title text-5xl md:text-7xl text-foreground">
                   听
@@ -262,7 +249,6 @@ export default function LingZhu() {
             </motion.div>
           )}
 
-          {/* 竹简结果视图 */}
           {showBamboo && speakers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -270,7 +256,6 @@ export default function LingZhu() {
               transition={{ duration: 1 }}
               className="w-full max-w-6xl px-4"
             >
-              {/* 漆面音频播放器 */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -278,7 +263,6 @@ export default function LingZhu() {
                 className="mb-8 bg-gradient-to-b from-[#1a0f08] to-[#12402c] p-6 rounded-2xl shadow-2xl border border-[#276b4d]/30"
               >
                 <div className="flex items-center gap-4">
-                  {/* 播放/暂停按钮 */}
                   <button
                     onClick={togglePlayPause}
                     className="w-12 h-12 rounded-full bg-[#276b4d] hover:bg-[#2d7a56] transition-colors flex items-center justify-center shadow-lg"
@@ -295,12 +279,10 @@ export default function LingZhu() {
                     )}
                   </button>
 
-                  {/* 时间显示 */}
                   <span className="font-mono-cn text-sm text-[#b8d6b6] min-w-[3rem]">
                     {formatTime(currentTime)}
                   </span>
 
-                  {/* 竹节滑动条 */}
                   <div className="flex-1 relative h-8 flex items-center">
                     <input
                       type="range"
@@ -316,7 +298,6 @@ export default function LingZhu() {
                     />
                   </div>
 
-                  {/* 总时长 */}
                   <span className="font-mono-cn text-sm text-[#b8d6b6] min-w-[3rem]">
                     {formatTime(actualDuration)}
                   </span>
@@ -391,7 +372,6 @@ export default function LingZhu() {
           )}
         </div>
 
-        {/* 控制按钮 */}
         {showBamboo && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -402,26 +382,60 @@ export default function LingZhu() {
             <button
               onClick={handleReset}
               className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-sans-body"
+              style={{ cursor: 'pointer' }}
             >
               重置
             </button>
             <button
               className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-sans-body"
-              onClick={() => {
-                const data = segments.map(s => ({
-                  speaker: s.speaker,
-                  startTime: s.startTime,
-                  endTime: s.endTime,
-                  duration: s.duration,
-                  timestamp: Date.now()
-                }))
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `speaker-segments-${Date.now()}.json`
-                a.click()
-                URL.revokeObjectURL(url)
+              style={{ cursor: 'pointer' }}
+              onClick={async () => {
+                if (!audioFile || !diarizationResult) {
+                  addNotification('没有可用的音频或分段数据', 'error')
+                  return
+                }
+
+                try {
+                  addNotification('正在分离说话人音频，请稍候...', 'info')
+                  
+                  const formData = new FormData()
+                  formData.append('audio', audioFile)
+                  
+                  const segmentsData = diarizationResult.segments.map(s => ({
+                    speaker: s.speaker,
+                    startTime: s.startTime,
+                    endTime: s.endTime
+                  }))
+                  formData.append('segments', JSON.stringify(segmentsData))
+                  
+                  const numSpeakers = diarizationResult.totalSpeakers
+                  formData.append('numSpeakers', numSpeakers.toString())
+
+                  const response = await fetch('/api/separate', {
+                    method: 'POST',
+                    body: formData,
+                  })
+
+                  if (!response.ok) {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || '音频分离失败')
+                  }
+
+                  const blob = await response.blob()
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `separated-speakers-${Date.now()}.zip`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                  
+                  addNotification('音频分离完成！', 'info')
+                } catch (err) {
+                  addNotification(
+                    err instanceof Error ? err.message : '音频分离失败',
+                    'error'
+                  )
+                }
               }}
             >
               导出分段
@@ -429,7 +443,6 @@ export default function LingZhu() {
           </motion.div>
         )}
 
-        {/* 状态提示 */}
         {!showBamboo && (
           <motion.div
             initial={{ opacity: 0 }}
