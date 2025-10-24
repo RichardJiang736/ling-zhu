@@ -4,9 +4,9 @@
     </picture>
 </p>
 <p align="center">
-    <a href="https://diarisator-ai.vercel.app">官方网站 (Official Website) 🌐</a>
+    <a href="https://ling-zhu-production.up.railway.app/">官方网站 (Official Website) 🌐</a>
     <br>
-    <a href="https://github.com/RichardJiang736/DiarisatorAI">代码仓库 (GitHub Repository) 💻</a>
+    <a href="https://github.com/RichardJiang736/ling-zhu">代码仓库 (GitHub Repository) 💻</a>
     <br>
 </p>
 
