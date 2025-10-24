@@ -58,12 +58,13 @@ export function useAudioProcessor(): AudioProcessorHook {
   const pendingMessagesRef = useRef<Map<number, any>>(new Map())
 
   const initWorker = useCallback(() => {
-    if (typeof Worker === 'undefined') {
+    if (typeof window === 'undefined' || typeof Worker === 'undefined') {
       return null
     }
 
     try {
-      const worker = new Worker('/audio-worker.js')
+      const workerUrl = new URL('/audio-worker.js', window.location.origin)
+      const worker = new Worker(workerUrl)
       
       worker.onmessage = (e) => {
         const { type, id, data, error: workerError } = e.data
@@ -115,6 +116,10 @@ export function useAudioProcessor(): AudioProcessorHook {
   }, [])
 
   const selectAudioFile = useCallback(async (): Promise<void> => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return Promise.reject(new Error('此功能仅在浏览器中可用'))
+    }
+    
     return new Promise((resolve, reject) => {
       const fileInput = document.createElement('input')
       fileInput.type = 'file'
@@ -227,10 +232,12 @@ export function useAudioProcessor(): AudioProcessorHook {
   }, [])
 
   const processAudio = useCallback(async () => {
+    if (typeof window === 'undefined') {
+      return
+    }
     if (!analyserRef.current || !workerRef.current || !isListening) {
       return
     }
-    
     try {
       const bufferLength = analyserRef.current.frequencyBinCount
       const dataArray = new Float32Array(bufferLength)
@@ -251,7 +258,7 @@ export function useAudioProcessor(): AudioProcessorHook {
       console.error('Audio processing error:', err)
     }
     
-    if (isListening) {
+    if (isListening && typeof window !== 'undefined') {
       animationFrameRef.current = requestAnimationFrame(processAudio)
     }
   }, [isListening, sendMessage])
@@ -305,10 +312,12 @@ export function useAudioProcessor(): AudioProcessorHook {
   }, [])
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
     if (isListening && analyserRef.current) {
       animationFrameRef.current = requestAnimationFrame(processAudio)
     }
-    
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
