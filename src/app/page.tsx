@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAudioProcessor } from '@/hooks/useAudioProcessor'
 
@@ -26,6 +26,7 @@ export default function LingZhu() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(180)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default')
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const audioFileRef = useRef<File | null>(null)
   
@@ -36,6 +37,44 @@ export default function LingZhu() {
   })) || []
 
   const actualDuration = diarizationResult?.duration || duration
+
+  useEffect(() => {
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission)
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          setNotificationPermission(permission)
+        })
+      }
+    }
+  }, [])
+
+  const showBrowserNotification = useCallback((title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon-32x32.png',
+        badge: '/favicon-32x32.png',
+        tag: 'lingzhu-notification',
+        requireInteraction: false,
+      })
+      
+      notification.onclick = () => {
+        window.focus()
+        notification.close()
+      }
+      
+      setTimeout(() => {
+        notification.close()
+      }, 5000)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (diarizationResult && speakers.length > 0) {
+      showBrowserNotification('聆竹 - 识别完成', `已识别${diarizationResult.totalSpeakers}位说话人，共${diarizationResult.segments.length}个片段`)
+    }
+  }, [diarizationResult, speakers, showBrowserNotification])
 
   useEffect(() => {
     if (audioFile && !audioRef.current) {
@@ -72,20 +111,20 @@ export default function LingZhu() {
     }
   }, [audioFile])
 
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins}:${secs.toString().padStart(2, '0')}`
-  }
+  }, [])
 
-  const addNotification = (message: string, type: 'error' | 'info' = 'error') => {
+  const addNotification = useCallback((message: string, type: 'error' | 'info' = 'error') => {
     const id = Date.now().toString()
     setNotifications(prev => [...prev, { id, message, type }])
     
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id))
     }, 5000)
-  }
+  }, [])
 
   useEffect(() => {
     if (error) {
@@ -93,7 +132,7 @@ export default function LingZhu() {
     }
   }, [error])
 
-  const togglePlayPause = () => {
+  const togglePlayPause = useCallback(() => {
     if (!audioRef.current) return
 
     if (isPlaying) {
@@ -102,18 +141,18 @@ export default function LingZhu() {
       audioRef.current.play()
     }
     setIsPlaying(!isPlaying)
-  }
+  }, [isPlaying])
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = parseFloat(e.target.value)
     setCurrentTime(newTime)
     
     if (audioRef.current) {
       audioRef.current.currentTime = newTime
     }
-  }
+  }, [])
 
-  const handleStartListening = async () => {
+  const handleStartListening = useCallback(async () => {
     try {
       await startListening()
       setTimeout(() => {
@@ -122,9 +161,9 @@ export default function LingZhu() {
     } catch (err) {
       console.error('Failed to start listening:', err)
     }
-  }
+  }, [startListening])
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current.currentTime = 0
@@ -136,7 +175,7 @@ export default function LingZhu() {
     setShowBamboo(false)
     setIsPlaying(false)
     setCurrentTime(0)
-  }
+  }, [reset])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -444,6 +483,7 @@ export default function LingZhu() {
                   URL.revokeObjectURL(url)
                   
                   addNotification('音频分离完成！', 'info')
+                  showBrowserNotification('聆竹 - 导出完成', '说话人音频已分离完成，文件已开始下载')
                 } catch (err) {
                   addNotification(
                     err instanceof Error ? err.message : '音频分离失败',

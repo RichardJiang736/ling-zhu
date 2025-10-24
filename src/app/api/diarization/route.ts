@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SherpaDiarization } from '@/lib/sherpa-diarization';
 
-const sherpaDiarization = new SherpaDiarization();
-
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,10 +30,11 @@ export async function POST(request: NextRequest) {
     const bytes = await audioFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    const sherpaDiarization = SherpaDiarization.getInstance();
     await sherpaDiarization.initialize();
     const speakerSegments = await sherpaDiarization.processAudio(buffer);
 
-    const speakerIds = [...new Set(speakerSegments.map(s => s.speaker))];
+    const speakerIds = [...new Set(speakerSegments.map(s => s.speaker))] as number[];
     const speakers = speakerIds.map((speakerId: number, index: number) => {
       const segments = speakerSegments.filter(s => s.speaker === speakerId);
       const totalDuration = segments.reduce(

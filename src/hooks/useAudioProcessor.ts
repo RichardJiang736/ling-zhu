@@ -59,7 +59,6 @@ export function useAudioProcessor(): AudioProcessorHook {
 
   const initWorker = useCallback(() => {
     if (typeof Worker === 'undefined') {
-      setError('当前环境不支持WebWorker')
       return null
     }
 
@@ -90,7 +89,6 @@ export function useAudioProcessor(): AudioProcessorHook {
       
       return worker
     } catch (err) {
-      setError('无法初始化音频处理器')
       return null
     }
   }, [])

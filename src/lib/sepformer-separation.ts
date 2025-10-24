@@ -24,9 +24,17 @@ interface PythonServiceResponse {
 export class SepFormerSeparation {
   private pythonServicePath: string;
   private initialized: boolean = false;
+  private static instance: SepFormerSeparation | null = null;
 
   constructor() {
     this.pythonServicePath = './scripts/sepformer-python-service.py';
+  }
+
+  static getInstance(): SepFormerSeparation {
+    if (!SepFormerSeparation.instance) {
+      SepFormerSeparation.instance = new SepFormerSeparation();
+    }
+    return SepFormerSeparation.instance;
   }
 
   async initialize(): Promise<void> {

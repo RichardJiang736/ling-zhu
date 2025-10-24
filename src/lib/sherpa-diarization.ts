@@ -22,6 +22,7 @@ interface DiarizationSegment {
 export class SherpaDiarization {
   private config: any;
   private initialized: boolean = false;
+  private static instance: SherpaDiarization | null = null;
 
   constructor() {
     this.config = {
@@ -42,6 +43,13 @@ export class SherpaDiarization {
       minDurationOn: 0.2,
       minDurationOff: 0.5,
     };
+  }
+
+  static getInstance(): SherpaDiarization {
+    if (!SherpaDiarization.instance) {
+      SherpaDiarization.instance = new SherpaDiarization();
+    }
+    return SherpaDiarization.instance;
   }
 
   async initialize(): Promise<void> {

@@ -12,7 +12,7 @@ async function createCustomServer() {
     const nextApp = next({ 
       dev,
       dir: process.cwd(),
-      conf: dev ? undefined : { distDir: './.next' }
+      turbo: !dev,
     });
 
     await nextApp.prepare();
@@ -22,6 +22,9 @@ async function createCustomServer() {
       if (req.url?.startsWith('/api/socketio')) {
         return;
       }
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
       handle(req, res);
     });
 
@@ -30,7 +33,10 @@ async function createCustomServer() {
       cors: {
         origin: "*",
         methods: ["GET", "POST"]
-      }
+      },
+      transports: ['websocket', 'polling'],
+      pingTimeout: 30000,
+      pingInterval: 25000,
     });
 
     setupSocket(io);

@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SepFormerSeparation } from '@/lib/sepformer-separation';
 
-const sepformer = new SepFormerSeparation();
-
 export const runtime = 'nodejs';
 export const maxDuration = 300;
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +44,7 @@ export async function POST(request: NextRequest) {
     const bytes = await audioFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    const sepformer = SepFormerSeparation.getInstance();
     await sepformer.initialize();
     const separatedSegments = await sepformer.separateSpeaker(buffer, segments, numSpeakers);
 
