@@ -1,6 +1,6 @@
 <p align="center">
     <picture>
-        <img alt="聆竹 Logo" src="public/logo.svg" width="40%">
+        <img alt="聆竹 Logo" src="public/logo.png" width="40%">
     </picture>
 </p>
 <p align="center">
