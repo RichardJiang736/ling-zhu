@@ -6,7 +6,7 @@ nixPkgs = ["nodejs_20", "python311", "python311Packages.pip", "ffmpeg"]
 
 [phases.install]
 cmds = [
-  "npm install",
+  "npm install --legacy-peer-deps",
   "mkdir -p /opt/python-deps",
   "pip install --break-system-packages --no-cache-dir --target=/opt/python-deps --index-url https://download.pytorch.org/whl/cpu torch==2.5.0+cpu torchaudio==2.5.0+cpu",
   "pip install --break-system-packages --no-cache-dir --no-deps --target=/opt/python-deps speechbrain==1.0.3",
@@ -17,4 +17,4 @@ cmds = [
 cmds = ["npm run build"]
 
 [start]
-cmd = "PYTHONPATH=/opt/python-deps:$PYTHONPATH npm start"
+cmd = "PYTHONPATH=/opt/python-deps:$PYTHONPATH NODE_ENV=production npm start"
