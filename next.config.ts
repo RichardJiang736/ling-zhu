@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   compress: true,
-  optimizeFonts: true,
   poweredByHeader: false,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
@@ -45,7 +44,10 @@ const nextConfig: NextConfig = {
             lib: {
               test: /[\\/]node_modules[\\/]/,
               name(module: any) {
-                const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)[1];
+                if (!module.context) return 'vendor';
+                const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+                if (!match || !match[1]) return 'vendor';
+                const packageName = match[1];
                 return `npm.${packageName.replace('@', '')}`;
               },
               priority: 30,
