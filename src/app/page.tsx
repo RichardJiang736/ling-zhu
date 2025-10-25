@@ -102,10 +102,8 @@ export default function LingZhu() {
       })
 
       return () => {
-        if (audioRef.current) {
-          audioRef.current.pause()
-          audioRef.current.src = ''
-        }
+        audio.pause()
+        audio.src = ''
         URL.revokeObjectURL(blobUrl)
       }
     }
@@ -165,9 +163,14 @@ export default function LingZhu() {
 
   const handleReset = useCallback(() => {
     if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.currentTime = 0
-      URL.revokeObjectURL(audioRef.current.src)
+      const currentAudio = audioRef.current
+      currentAudio.pause()
+      currentAudio.currentTime = 0
+      const currentSrc = currentAudio.src
+      currentAudio.src = ''
+      if (currentSrc && currentSrc.startsWith('blob:')) {
+        URL.revokeObjectURL(currentSrc)
+      }
       audioRef.current = null
     }
     
@@ -442,6 +445,8 @@ export default function LingZhu() {
                   return
                 }
 
+                const separationController = new AbortController()
+
                 try {
                   addNotification('正在分离说话人音频，请稍候...', 'info')
                   
@@ -461,7 +466,12 @@ export default function LingZhu() {
                   const response = await fetch('/api/separate', {
                     method: 'POST',
                     body: formData,
+                    signal: separationController.signal,
                   })
+
+                  if (separationController.signal.aborted) {
+                    throw new Error('请求已取消')
+                  }
 
                   if (!response.ok) {
                     let errorMessage = '音频分离失败'
@@ -485,10 +495,14 @@ export default function LingZhu() {
                   addNotification('音频分离完成！', 'info')
                   showBrowserNotification('聆竹 - 导出完成', '说话人音频已分离完成，文件已开始下载')
                 } catch (err) {
-                  addNotification(
-                    err instanceof Error ? err.message : '音频分离失败',
-                    'error'
-                  )
+                  if (err instanceof Error && err.name === 'AbortError') {
+                    addNotification('导出已取消', 'info')
+                  } else {
+                    addNotification(
+                      err instanceof Error ? err.message : '音频分离失败',
+                      'error'
+                    )
+                  }
                 }
               }}
             >

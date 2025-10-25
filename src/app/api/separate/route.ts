@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SepFormerSeparation } from '@/lib/sepformer-separation';
+import { QueueManager } from '@/lib/queue-manager';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 
+const queueManager = QueueManager.getInstance(2, 10, 300000);
+
 export async function POST(request: NextRequest) {
+  const controller = new AbortController();
+  const taskId = `separation-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+  const cleanup = () => {
+    controller.abort();
+  };
+
+  request.signal.addEventListener('abort', cleanup);
+
   try {
     const contentLength = request.headers.get('content-length');
     const maxSize = 100 * 1024 * 1024;
@@ -44,22 +56,50 @@ export async function POST(request: NextRequest) {
     const bytes = await audioFile.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const sepformer = SepFormerSeparation.getInstance();
-    await sepformer.initialize();
-    const separatedSegments = await sepformer.separateSpeaker(buffer, segments, numSpeakers);
+    if (controller.signal.aborted) {
+      return NextResponse.json(
+        { error: 'Request cancelled' },
+        { status: 499 }
+      );
+    }
 
-    const zipBuffer = await sepformer.createZipArchive(separatedSegments);
-    await sepformer.cleanup(separatedSegments);
+    const result = await queueManager.enqueue(
+      taskId,
+      async () => {
+        if (controller.signal.aborted) {
+          throw new Error('Request cancelled');
+        }
+
+        const sepformer = SepFormerSeparation.getInstance();
+        await sepformer.initialize();
+        const separatedSegments = await sepformer.separateSpeaker(buffer, segments, numSpeakers, controller.signal);
+
+        if (controller.signal.aborted) {
+          await sepformer.cleanup(separatedSegments);
+          throw new Error('Request cancelled');
+        }
+
+        const zipBuffer = await sepformer.createZipArchive(separatedSegments);
+        await sepformer.cleanup(separatedSegments);
+
+        return zipBuffer;
+      },
+      controller.signal
+    );
 
     const headers = new Headers();
     headers.set('Content-Type', 'application/zip');
     headers.set('Content-Disposition', `attachment; filename="separated-speakers-${Date.now()}.zip"`);
     
-    return new NextResponse(new Blob([new Uint8Array(zipBuffer)]), {
+    return new NextResponse(new Blob([new Uint8Array(result)]), {
       headers,
     });
 
   } catch (error) {
+    if (error instanceof Error && error.message.includes('abort')) {
+      return new NextResponse(null, { status: 499 });
+    }
+
     console.error('Separation error:', error);
     return NextResponse.json(
       { 
@@ -67,5 +107,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  } finally {
+    request.signal.removeEventListener('abort', cleanup);
   }
 }

@@ -39,6 +39,8 @@ yarn-error.log*
 # deployment docs (keep local only)
 RAILWAY_DEPLOYMENT.md
 OPTIMIZATIONS.md
+PERFORMANCE_IMPROVEMENTS.md
+RAILWAY_OPTIMIZATION.md
 
 # typescript
 *.tsbuildinfo

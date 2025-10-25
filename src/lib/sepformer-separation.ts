@@ -25,6 +25,8 @@ export class SepFormerSeparation {
   private pythonServicePath: string;
   private initialized: boolean = false;
   private static instance: SepFormerSeparation | null = null;
+  private processing: boolean = false;
+  private tempFiles: Set<string> = new Set();
 
   constructor() {
     this.pythonServicePath = './scripts/sepformer-python-service.py';
@@ -58,35 +60,73 @@ export class SepFormerSeparation {
       );
     }
   }
+
+  private async cleanupTempFiles(): Promise<void> {
+    const cleanup = Array.from(this.tempFiles);
+    this.tempFiles.clear();
+    
+    await Promise.all(
+      cleanup.map(file => 
+        fs.unlink(file).catch(() => {})
+      )
+    );
+  }
+
   private async extractSegmentAudio(
     originalAudioPath: string,
     startTime: number,
     endTime: number,
-    outputPath: string
+    outputPath: string,
+    abortSignal?: AbortSignal
   ): Promise<void> {
+    if (abortSignal?.aborted) {
+      throw new Error('Operation aborted');
+    }
+
+    this.tempFiles.add(outputPath);
+
     try {
       await execAsync(
         `ffmpeg -i "${originalAudioPath}" -ss ${startTime} -to ${endTime} -ar 16000 -ac 1 "${outputPath}" -y`,
-        { maxBuffer: 50 * 1024 * 1024 }
+        { 
+          maxBuffer: 50 * 1024 * 1024,
+          signal: abortSignal as any
+        }
       );
     } catch (error) {
+      if (abortSignal?.aborted) {
+        throw new Error('Operation aborted');
+      }
       throw new Error(`Failed to extract audio segment: ${error}`);
     }
   }
+
   async separateSpeaker(
     audioBuffer: Buffer,
     segments: Array<{ speaker: string; startTime: number; endTime: number }>,
-    numSpeakers: number
+    numSpeakers: number,
+    abortSignal?: AbortSignal
   ): Promise<SeparationSegment[]> {
-    await this.initialize();
+    if (this.processing) {
+      throw new Error('Another separation is already in progress');
+    }
 
-    const tempDir = tmpdir();
-    const inputAudioPath = path.join(tempDir, `input-${Date.now()}.wav`);
-    
-    await fs.writeFile(inputAudioPath, audioBuffer);
-    const results: SeparationSegment[] = [];
+    this.processing = true;
 
     try {
+      await this.initialize();
+
+      if (abortSignal?.aborted) {
+        throw new Error('Operation aborted');
+      }
+
+      const tempDir = tmpdir();
+      const inputAudioPath = path.join(tempDir, `input-${Date.now()}-${Math.random().toString(36).substring(7)}.wav`);
+      this.tempFiles.add(inputAudioPath);
+      
+      await fs.writeFile(inputAudioPath, audioBuffer);
+      const results: SeparationSegment[] = [];
+
       const speakerSegments = new Map<string, typeof segments>();
       segments.forEach(seg => {
         if (!speakerSegments.has(seg.speaker)) {
@@ -98,27 +138,39 @@ export class SepFormerSeparation {
       console.log(`Processing ${numSpeakers} speakers with ${segments.length} total segments`);
 
       for (let i = 0; i < segments.length; i++) {
+        if (abortSignal?.aborted) {
+          await this.cleanupTempFiles();
+          throw new Error('Operation aborted');
+        }
+
         const segment = segments[i];
         const segmentInputPath = path.join(
           tempDir,
-          `segment-${Date.now()}-${i}.wav`
+          `segment-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}.wav`
         );
         const separatedOutputDir = path.join(
           tempDir,
-          `separated-${Date.now()}-${i}`
+          `separated-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}`
         );
 
         await this.extractSegmentAudio(
           inputAudioPath,
           segment.startTime,
           segment.endTime,
-          segmentInputPath
+          segmentInputPath,
+          abortSignal
         );
+
+        if (abortSignal?.aborted) {
+          await this.cleanupTempFiles();
+          throw new Error('Operation aborted');
+        }
 
         const pythonCmd = `python3 "${this.pythonServicePath}" "${segmentInputPath}" "${separatedOutputDir}" ${Math.min(numSpeakers, 2)}`;
         const { stdout, stderr } = await execAsync(pythonCmd, {
           maxBuffer: 50 * 1024 * 1024,
-          timeout: 120000
+          timeout: 120000,
+          signal: abortSignal as any
         });
 
         if (stderr && !stderr.includes('UserWarning')) {
@@ -139,10 +191,14 @@ export class SepFormerSeparation {
 
         const finalOutputPath = path.join(
           tempDir,
-          `final-separated-${Date.now()}-${i}.wav`
+          `final-separated-${Date.now()}-${i}-${Math.random().toString(36).substring(7)}.wav`
         );
+        this.tempFiles.add(finalOutputPath);
         await fs.copyFile(sourcePath, finalOutputPath);
+        
         await fs.unlink(segmentInputPath).catch(() => {});
+        this.tempFiles.delete(segmentInputPath);
+        
         if (response.output_paths) {
           for (const outPath of response.output_paths) {
             await fs.unlink(outPath).catch(() => {});
@@ -159,10 +215,13 @@ export class SepFormerSeparation {
       }
       
       await fs.unlink(inputAudioPath).catch(() => {});
+      this.tempFiles.delete(inputAudioPath);
       return results;
     } catch (error) {
-      await fs.unlink(inputAudioPath).catch(() => {});
+      await this.cleanupTempFiles();
       throw new Error(`Failed to separate audio: ${error}`);
+    } finally {
+      this.processing = false;
     }
   }
 
@@ -193,6 +252,7 @@ export class SepFormerSeparation {
   async cleanup(segments: SeparationSegment[]): Promise<void> {
     for (const segment of segments) {
       await fs.unlink(segment.audioPath).catch(() => {});
+      this.tempFiles.delete(segment.audioPath);
     }
   }
 }

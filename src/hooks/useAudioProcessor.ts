@@ -153,7 +153,16 @@ export function useAudioProcessor(): AudioProcessorHook {
     })
   }, [])
 
+  const abortControllerRef = useRef<AbortController | null>(null)
+
   const loadAudioFile = useCallback(async (file: File) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     try {
       setIsProcessing(true)
       setError(null)
@@ -165,7 +174,12 @@ export function useAudioProcessor(): AudioProcessorHook {
       const response = await fetch('/api/diarization', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       })
+
+      if (controller.signal.aborted) {
+        throw new Error('Request cancelled')
+      }
 
       if (!response.ok) {
         let errorMessage = '说话人识别失败'
@@ -203,9 +217,17 @@ export function useAudioProcessor(): AudioProcessorHook {
       setIsProcessing(false)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : '音频文件加载失败')
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('请求已取消')
+      } else {
+        setError(err instanceof Error ? err.message : '音频文件加载失败')
+      }
       setIsProcessing(false)
       throw err
+    } finally {
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null
+      }
     }
   }, [])
 
@@ -332,6 +354,10 @@ export function useAudioProcessor(): AudioProcessorHook {
   }, [stopListening])
 
   const reset = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
     stopListening()
     setSpeakers([])
     setDiarizationResult(null)

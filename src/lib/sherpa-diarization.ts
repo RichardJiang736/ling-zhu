@@ -23,6 +23,8 @@ export class SherpaDiarization {
   private config: any;
   private initialized: boolean = false;
   private static instance: SherpaDiarization | null = null;
+  private processing: boolean = false;
+  private tempFiles: Set<string> = new Set();
 
   constructor() {
     this.config = {
@@ -67,40 +69,96 @@ export class SherpaDiarization {
     }
   }
 
-  private async ensureAudio16kHz(audioBuffer: Buffer): Promise<string> {
+  private async ensureAudio16kHz(audioBuffer: Buffer, abortSignal?: AbortSignal): Promise<string> {
+    if (abortSignal?.aborted) {
+      throw new Error('Operation aborted');
+    }
+
     const tempDir = tmpdir();
-    const inputPath = path.join(tempDir, `input-${Date.now()}.wav`);
-    const outputPath = path.join(tempDir, `output-${Date.now()}_16k.wav`);
+    const inputPath = path.join(tempDir, `input-${Date.now()}-${Math.random().toString(36).substring(7)}.wav`);
+    const outputPath = path.join(tempDir, `output-${Date.now()}-${Math.random().toString(36).substring(7)}_16k.wav`);
+
+    this.tempFiles.add(inputPath);
+    this.tempFiles.add(outputPath);
 
     await fs.writeFile(inputPath, audioBuffer);
+
+    if (abortSignal?.aborted) {
+      await this.cleanupTempFiles();
+      throw new Error('Operation aborted');
+    }
+
     try {
       await execAsync(
         `ffmpeg -i "${inputPath}" -ar 16000 -ac 1 "${outputPath}" -y`,
-        { maxBuffer: 50 * 1024 * 1024 }
+        { 
+          maxBuffer: 50 * 1024 * 1024,
+          signal: abortSignal as any
+        }
       );
     } catch (error) {
-      await fs.unlink(inputPath).catch(() => {});
+      await this.cleanupTempFiles();
+      if (abortSignal?.aborted) {
+        throw new Error('Operation aborted');
+      }
       throw new Error(`Failed to convert audio to 16kHz: ${error}`);
     }
+
     await fs.unlink(inputPath).catch(() => {});
+    this.tempFiles.delete(inputPath);
     return outputPath;
   }
 
-  async processAudio(audioBuffer: Buffer): Promise<DiarizationSegment[]> {
-    await this.initialize();
-    const audioPath = await this.ensureAudio16kHz(audioBuffer);
+  private async cleanupTempFiles(): Promise<void> {
+    const cleanup = Array.from(this.tempFiles);
+    this.tempFiles.clear();
+    
+    await Promise.all(
+      cleanup.map(file => fs.unlink(file).catch(() => {}))
+    );
+  }
+
+  async processAudio(audioBuffer: Buffer, abortSignal?: AbortSignal): Promise<DiarizationSegment[]> {
+    if (this.processing) {
+      throw new Error('Another diarization is already in progress');
+    }
+
+    this.processing = true;
 
     try {
+      await this.initialize();
+
+      if (abortSignal?.aborted) {
+        throw new Error('Operation aborted');
+      }
+
+      const audioPath = await this.ensureAudio16kHz(audioBuffer, abortSignal);
+
+      if (abortSignal?.aborted) {
+        await this.cleanupTempFiles();
+        throw new Error('Operation aborted');
+      }
+
       const sd = sherpa_onnx.createOfflineSpeakerDiarization(this.config);
       const wave = sherpa_onnx.readWave(audioPath);
+      
       if (sd.sampleRate !== wave.sampleRate) {
+        await fs.unlink(audioPath).catch(() => {});
+        this.tempFiles.delete(audioPath);
         throw new Error(
           `Sample rate mismatch: expected ${sd.sampleRate}, got ${wave.sampleRate}`
         );
       }
 
+      if (abortSignal?.aborted) {
+        await fs.unlink(audioPath).catch(() => {});
+        this.tempFiles.delete(audioPath);
+        throw new Error('Operation aborted');
+      }
+
       const segments: SherpaSegment[] = sd.process(wave.samples);
       await fs.unlink(audioPath).catch(() => {});
+      this.tempFiles.delete(audioPath);
 
       return segments.map((seg) => ({
         speaker: seg.speaker,
@@ -108,8 +166,10 @@ export class SherpaDiarization {
         endTime: seg.end,
       }));
     } catch (error) {
-      await fs.unlink(audioPath).catch(() => {});
+      await this.cleanupTempFiles();
       throw error;
+    } finally {
+      this.processing = false;
     }
   }
 

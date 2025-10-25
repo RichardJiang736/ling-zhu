@@ -22,6 +22,13 @@ async function createCustomServer() {
       if (req.url?.startsWith('/api/socketio')) {
         return;
       }
+      
+      res.setTimeout(310000, () => {
+        console.log('Request timeout');
+        res.writeHead(408);
+        res.end('Request Timeout');
+      });
+
       res.setHeader('X-Content-Type-Options', 'nosniff');
       res.setHeader('X-Frame-Options', 'DENY');
       res.setHeader('X-XSS-Protection', '1; mode=block');
